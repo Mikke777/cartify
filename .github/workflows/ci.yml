@@ -1,95 +1,57 @@
 name: CI
 
-on:
-  pull_request:
-  push:
-    branches: [ master ]
+# triggers on
+on: [push]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-
+    env:
+      RAILS_ENV: test
+      NODE_ENV: test
+    runs-on: ubuntu-latest # runner
     services:
+      # Label used to access the service container
       postgres:
+        # Docker Hub image
         image: postgres
+        # Provide the password for postgres
         env:
-          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
-
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libvips postgresql-client
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - name: Checkout repository # copies repo in runner
+        uses: actions/checkout@v2 # short for https://github.com/actions/checkout
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1 # short for https://github.com/ruby/setup-ruby
         with:
-          ruby-version: 3.3.5
+          # runs 'bundle install' and caches installed gems automatically
           bundler-cache: true
-
-      - name: Install dependencies
-        run: bundle install
-        working-directory: backend
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          for i in {1..60}; do # Increased retries to 60
-            pg_isready -h localhost -p 5432 && break
-            echo "Waiting for PostgreSQL..."
-            sleep 5 # Increased sleep duration to 5 seconds
-          done
-        env:
-          PGPASSWORD: postgres
-
-      - name: Debug PostgreSQL logs
-        run: docker logs $(docker ps -q --filter "ancestor=postgres")
-
-      - name: Verify PostgreSQL is running
-        run: |
-          for i in {1..10}; do
-            psql -U postgres -c "SELECT 1;" && break
-            echo "Retrying connection to PostgreSQL..."
-            sleep 3
-          done
-        env:
-          PGPASSWORD: postgres
-
-      - name: Create PostgreSQL roles
-        run: |
-          set -e
-          psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';" || echo "Failed to create  'roleroot'"
-          psql -U postgres -c "CREATE ROLE runner WITH LOGIN PASSWORD 'password';" || echo "Failed to create role 'runner'"
-        env:
-          PGPASSWORD: postgres
-
-      - name: Copy database configuration
-        run: cp config/database.github.yml config/database.yml
-        working-directory: backend
-
-      - name: Ensure scripts are executable
-        run: chmod +x bin/rails
-        working-directory: backend
-
-      - name: Run tests
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://root:password@localhost:5432
-        run: |
-          bin/rails db:create
-          bin/rails db:migrate
-          bin/rails db:setup
-          bin/rails test
-        working-directory: backend
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
+      - name: Set up Node
+        uses: actions/setup-node@v2
         with:
-          name: screenshots
-          path: backend/tmp/screenshots
-          if-no-files-found: ignore
+          node-version: "16"
+      - name: Get Yarn cache directory path
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Setup cache key and directory for node_modules cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      - name: Yarn install
+        run: yarn install --frozen-lockfile
+      - name: Prepare DB
+        run: |
+          cp config/database.github.yml config/database.yml
+          bundle exec rails db:create db:migrate
+      - name: Run model tests
+        run: bundle exec rails test
+      - name: Run system tests
+        run: bundle exec rails test:system
