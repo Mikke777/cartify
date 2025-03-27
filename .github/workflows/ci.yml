@@ -74,12 +74,9 @@ jobs:
           ruby-version: 3.3.5
           bundler-cache: true
 
-      - name: Start PostgreSQL service
-        run: sudo service postgresql start
-
       - name: Create PostgreSQL roles
         run: |
-          psql -U postgres -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
+          psql -U postgres -c "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
         env:
           PGPASSWORD: postgres
 
@@ -100,7 +97,7 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://root:password@localhost:5432
         run: |
           bin/rails db:create
           bin/rails db:migrate
