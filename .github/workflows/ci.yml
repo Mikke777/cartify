@@ -74,12 +74,6 @@ jobs:
           ruby-version: 3.3.5
           bundler-cache: true
 
-      - name: Create PostgreSQL roles
-        run: |
-          psql -U postgres -c "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
-        env:
-          PGPASSWORD: postgres
-
       - name: Wait for PostgreSQL to be ready
         run: |
           for i in {1..10}; do
@@ -89,6 +83,16 @@ jobs:
           done
         env:
           PGPASSWORD: postgres
+
+      - name: Create PostgreSQL roles
+        run: |
+          psql -U postgres -c "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
+        env:
+          PGPASSWORD: postgres
+
+      - name: Copy database configuration
+        run: cp config/database.github.yml config/database.yml
+        working-directory: backend
 
       - name: Ensure scripts are executable
         run: chmod +x bin/rails
