@@ -76,11 +76,17 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in {1..10}; do
+          for i in {1..20}; do
             pg_isready -h localhost -p 5432 && break
             echo "Waiting for PostgreSQL..."
             sleep 3
           done
+        env:
+          PGPASSWORD: postgres
+
+      - name: Verify PostgreSQL is running
+        run: |
+          psql -U postgres -c "SELECT 1;"
         env:
           PGPASSWORD: postgres
 
