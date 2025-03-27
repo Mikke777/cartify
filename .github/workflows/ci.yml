@@ -34,10 +34,10 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in {1..30}; do
+          for i in {1..60}; do # Increased retries to 60
             pg_isready -h localhost -p 5432 && break
             echo "Waiting for PostgreSQL..."
-            sleep 3
+            sleep 5 # Increased sleep duration to 5 seconds
           done
         env:
           PGPASSWORD: postgres
@@ -55,7 +55,7 @@ jobs:
         run: |
           set -e
           psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';" || echo "Failed to create role 'root'"
-          psql -U postgres c- "CREATE ROLE runner WITH LOGIN PASSWORD 'password';" || echo "Failed to create role 'runner'"
+          psql -U postgres -c "CREATE ROLE runner WITH LOGIN PASSWORD 'password';" || echo "Failed to create role 'runner'"
         env:
           PGPASSWORD: postgres
 
