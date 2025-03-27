@@ -74,11 +74,33 @@ jobs:
           ruby-version: 3.3.5
           bundler-cache: true
 
+      - name: Create PostgreSQL roles
+        run: |
+          psql -U postgres -c "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
+        env:
+          PGPASSWORD: postgres
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 && break
+            echo "Waiting for PostgreSQL..."
+            sleep 3
+          done
+        env:
+          PGPASSWORD: postgres
+
+      - name: Ensure scripts are executable
+        run: chmod +x bin/rails
+        working-directory: backend
+
       - name: Run tests
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: |
+          bin/rails db:create
+          bin/rails db:migrate
           bin/rails db:setup
           bin/rails test
         working-directory: backend
