@@ -40,6 +40,10 @@ jobs:
           ruby-version: 3.3.5
           bundler-cache: true
 
+      - name: Install dependencies
+        run: bundle install
+        working-directory: backend
+
       - name: Lint code for consistent style
         run: bin/rubocop -f github
         working-directory: backend
