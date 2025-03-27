@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 # triggers on
 on: [push]
