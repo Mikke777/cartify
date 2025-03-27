@@ -45,9 +45,15 @@ jobs:
       - name: Debug PostgreSQL logs
         run: docker logs $(docker ps -q --filter "ancestor=postgres")
 
+      - name: Verify PostgreSQL is running
+        run: |
+          psql -U postgres -c "SELECT 1;"
+        env:
+          PGPASSWORD: postgres
+
       - name: Create PostgreSQL roles
         run: |
-          psql -U postgres -c "CREATE ROLE root WITH LOGIN  PASSWORDSUPERUSER 'password';"
+          psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';"
           psql -U postgres -c "CREATE ROLE runner WITH LOGIN PASSWORD 'password';"
         env:
           PGPASSWORD: postgres
