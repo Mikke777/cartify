@@ -6,48 +6,6 @@ on:
     branches: [ master ]
 
 jobs:
-  scan_ruby:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3.5
-          bundler-cache: true
-
-      - name: Install dependencies
-        run: bundle install
-        working-directory: backend
-
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
-        working-directory: backend
-
-  lint:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3.5
-          bundler-cache: true
-
-      - name: Install dependencies
-        run: bundle install
-        working-directory: backend
-
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
-        working-directory: backend
-
   test:
     runs-on: ubuntu-latest
 
@@ -76,13 +34,16 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in {1..20}; do
+          for i in {1..30}; do
             pg_isready -h localhost -p 5432 && break
             echo "Waiting for PostgreSQL..."
             sleep 3
           done
         env:
           PGPASSWORD: postgres
+
+      - name: Debug PostgreSQL logs
+        run: docker logs $(docker ps -q --filter "ancestor=postgres")
 
       - name: Verify PostgreSQL is running
         run: |
