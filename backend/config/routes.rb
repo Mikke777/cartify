@@ -9,8 +9,8 @@ Rails.application.routes.draw do
   # root "posts#index"
   resources :products, only: [:index]
   resources :carts, only: [:index, :show, :create] do
+    resources :cart_products, only: [:create, :update, :destroy]
     member do
-      post :add_product
       get :total_price
     end
   end
