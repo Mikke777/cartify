@@ -7,9 +7,9 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
-  resources :products, only: [:index]
-  resources :carts, only: [:index, :show, :create] do
-    resources :cart_products, only: [:create, :update, :destroy]
+  resources :products, only: [ :index ]
+  resources :carts, only: [ :index, :show, :create ] do
+    resources :cart_products, only: [ :create, :update, :destroy ]
     member do
       get :total_price
     end

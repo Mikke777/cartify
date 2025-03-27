@@ -1,7 +1,7 @@
 class CartProductsController < ApplicationController
-  before_action :find_cart, only: [:create]
-  before_action :find_cart_product, only: [:update, :destroy]
-  before_action :validate_quantity, only: [:create, :update]
+  before_action :find_cart, only: [ :create ]
+  before_action :find_cart_product, only: [ :update, :destroy ]
+  before_action :validate_quantity, only: [ :create, :update ]
 
   def create
     product = Product.find_by(product_code: params[:product_code])
