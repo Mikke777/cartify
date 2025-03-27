@@ -32,6 +32,10 @@ jobs:
           ruby-version: 3.3.5
           bundler-cache: true
 
+      - name: Install dependencies
+        run: bundle install
+        working-directory: backend
+
       - name: Wait for PostgreSQL to be ready
         run: |
           for i in {1..60}; do # Increased retries to 60
@@ -58,7 +62,7 @@ jobs:
       - name: Create PostgreSQL roles
         run: |
           set -e
-          psql -U postgres -c "CREATE  rootROLE WITH LOGIN SUPERUSER PASSWORD 'password';" || echo "Failed to create role 'root'"
+          psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';" || echo "Failed to create role 'root'"
           psql -U postgres -c "CREATE ROLE runner WITH LOGIN PASSWORD 'password';" || echo "Failed to create role 'runner'"
         env:
           PGPASSWORD: postgres
