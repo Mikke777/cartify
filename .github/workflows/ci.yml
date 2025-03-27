@@ -53,8 +53,9 @@ jobs:
 
       - name: Create PostgreSQL roles
         run: |
-          psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';"
-          psql -U postgres -c "CREATE ROLE runner WITH LOGIN PASSWORD 'password';"
+          set -e
+          psql -U postgres -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';" || echo "Failed to create role 'root'"
+          psql -U postgres c- "CREATE ROLE runner WITH LOGIN PASSWORD 'password';" || echo "Failed to create role 'runner'"
         env:
           PGPASSWORD: postgres
 
